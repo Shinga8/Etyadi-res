@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etyadi Restaurant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              serif: ['"Playfair Display"', 'serif'],
+              sans: ['"Lato"', 'sans-serif'],
+            },
+            colors: {
+              etyadi: {
+                bg: '#EBF4DD',
+                text: '#3B4953',
+                primary: '#5A7863',
+                secondary: '#90AB8B',
+              }
+            },
+            animation: {
+              'fade-in-up': 'fadeInUp 1s ease-out forwards',
+            },
+            keyframes: {
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      /* Animation utilities */
+      .animate-in { animation-duration: 200ms; animation-fill-mode: forwards; }
+      .fade-in { animation-name: fadeIn; }
+      .zoom-in-95 { animation-name: zoomIn95; }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes zoomIn95 { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
+    <!-- React & Babel -->
+    <script type="importmap">
+    {
+        "imports": {
+            "react": "https://esm.sh/react@18.2.0",
+            "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+            "lucide-react": "https://esm.sh/lucide-react@0.292.0"
+        }
+    }
+    </script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-[#EBF4DD] text-[#3B4953]">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { 
+            Star, Leaf, ChefHat, Coffee, Menu, X, ExternalLink, 
+            ShoppingBag, ChevronRight, Search, Calendar, ChevronLeft, 
+            Clock, MapPin, Phone, Facebook, Instagram, CheckCircle 
+        } from 'lucide-react';
+
+        // --- CONSTANTS ---
+        const ORDER_LINK = "https://www.google.com/viewer/chooseprovider?mid=/g/11mr22dgqd&g2lbs=AIBNGdWGy1x7nxVsrYjW8OfHPQb2hyUT1j0LKLG9lPbZbqn1U8b27Hxhua3eED4sp9AxdN5iYy-bLsbNTJCf9oQCxdxnLXAx2nLzJjuhHrCeAfHwhEBN7Eo%3D&hl=en-IN&gl=in&fo_m=MfohQo559jFvMUOzJVpjPL1YMfZ3bInYwBDuMfaXTPp5KXh-&utm_source=tactile&gei=6jKHaZ7vHZ-tseMPvJzrmQI&ei=6jKHaZ7vHZ-tseMPvJzrmQI&fo_s=OA&opi=79508299&orderType=1&ebb=1&cs=0&foub=mcpp";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzx4cR9cWuqxZurSZkaygLenBlCrjCOpZDoa9-Z2KKzNJbSpCmLI3jYfTi8myis0HEW/exec"; 
+
+        const MENU_ITEMS = [
+          // --- Highlights & Signature ---
+          { id: 1, name: "Bamboo Smoked Chicken", price: 350, category: "Signature", description: "Chicken marinated in local herbs cooked inside fresh bamboo.", image: "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&q=80&w=800", type: "non-veg", rating: 4.8 },
+          { id: 2, name: "Butter Chicken", price: 340, category: "Signature", description: "Classic tandoori chicken simmered in a rich tomato-butter gravy.", image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&q=80&w=800", type: "non-veg", rating: 4.9 },
+          { id: 3, name: "Gulab Jamun with Rabri", price: 140, category: "Dessert", description: "Hot sweet dumplings served with rich condensed milk.", image: "https://images.unsplash.com/photo-1593701461250-d7b22dfd3a77?auto=format&fit=crop&q=80&w=800", type: "veg", rating: 4.9 },
+          
+          // --- Starters ---
+          { id: 4, name: "French Fries", price: 120, category: "Starters", description: "Crispy golden salted fries.", image: "https://images.unsplash.com/photo-1630384060421-a4323ceca041?auto=format&fit=crop&q=80&w=800", type: "veg", rating: 4.5 },
+          { id: 5, name: "Fish Finger", price: 280, category: "Starters", description: "Crumb fried fish fillets served with tartar sauce.", image: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?auto=format&fit=crop&q=80&w=800", type: "non-veg", rating: 4.7 },
+          { id: 6, name: "Chicken Pakoda", price: 220, category: "Starters", description: "Spiced batter fried chicken chunks.", image: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&q=80&w=800", type: "non-veg", rating: 4.6 },
+          { id: 7, name: "Paneer Roll", price: 150, category: "Starters", description: "Spiced paneer filling wrapped in fresh paratha.", image: "https://images.unsplash.com/photo-1606471191009-63994c53433b?auto=format&fit=crop&q=80&w=800", type: "veg", rating: 4.4 },
+          { id: 8, name: "Crispy Corn", price: 220, category: "Starters", description: "Golden fried corn kernels tossed with peppers.", image: "https://images.unsplash.com/photo-1585238342024-78d387f4a707?auto=format&fit=crop&q=80&w=800", type: "veg", rating: 4.4 },
+
+          // --- Main Course ---
+          { id: 9, name: "Paneer Butter Masala", price: 280, category: "Main Course", description: "Cottage cheese cubes in a rich, creamy tomato gravy.", image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&q=80&w=800", type: "veg", rating: 4.5 },
+          { id: 10, name: "Shahi Begum Chicken", price: 360, category: "Main Course", description: "Royal creamy chicken curry served best with Naan.", image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?auto=format&fit=crop&q=80&w=800", type: "non-veg", rating: 4.8 },
+          { id: 11, name: "Chicken Tikka Masala", price: 340, category: "Main Course", description: "Grilled chicken chunks in spiced curry.", image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80&w=800", type: "non-veg", rating: 4.7 },
+          { id: 12, name: "Paneer Kolhapuri", price: 290, category: "Main Course", description: "Spicy paneer gravy served with Butter Kulcha.", image: "https://images.unsplash.com/photo-1567337710282-00832b415979?auto=format&fit=crop&q=80&w=800", type: "veg", rating: 4.6 },
+
+          // --- Chinese / Noodles / Rice ---
+          { id: 13, name: "Veg Hakka Noodles", price: 180, category: "Chinese", description: "Classic wok-tossed noodles with fresh vegetables.", image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&q=80&w=800", type: "veg", rating: 4.3 },
+          { id: 14, name: "Schezwan Egg Noodles", price: 210, category: "Chinese", description: "Spicy noodles tossed with egg and schezwan sauce.", image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&q=80&w=800", type: "non-veg", rating: 4.5 },
+          { id: 15, name: "Chicken Hakka Noodles", price: 240, category: "Chinese", description: "Stir-fried noodles with tender chicken chunks.", image: "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800", type: "non-veg", rating: 4.6 },
+          { id: 16, name: "Veg Fried Rice", price: 190, category: "Rice", description: "Wok-tossed aromatic rice with finely chopped veggies.", image: "https://images.unsplash.com/photo-1603133872878-684f1084261d?auto=format&fit=crop&q=80&w=800", type: "veg", rating: 4.4 },
+          { id: 17, name: "Hyderabadi Biryani", price: 320, category: "Rice", description: "Aromatic basmati rice cooked with tender meat and spices.", image: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&q=80&w=800", type: "non-veg", rating: 4.9 },
+
+          // --- Beverages ---
+          { id: 18, name: "Virgin Mojito", price: 140, category: "Beverages", description: "Refreshing lime and mint cooler.", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=800", type: "veg", rating: 4.6 },
+          { id: 19, name: "Fresh Lime Soda", price: 90, category: "Beverages", description: "Sweet or salted refreshing soda with lemon.", image: "https://images.unsplash.com/photo-1568457717848-7688e147e8ab?auto=format&fit=crop&q=80&w=800", type: "veg", rating: 4.5 },
+          { id: 20, name: "Hot Coffee", price: 80, category: "Beverages", description: "Freshly brewed hot coffee.", image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=800", type: "veg", rating: 4.4 },
+          { id: 21, name: "Blue Lagoon", price: 150, category: "Beverages", description: "Refreshing blue curaçao mocktail.", image: "https://images.unsplash.com/photo-1546171753-97d7676e4602?auto=format&fit=crop&q=80&w=800", type: "veg", rating: 4.6 },
+        ];
+
+        const TESTIMONIALS = [
+          { id: 1, name: "Rahul Das", text: "The bamboo aesthetics are breathtaking. Best place in Silchar for a family dinner.", rating: 5 },
+          { id: 2, name: "Priya Sharma", text: "The food was authentic and the service was impeccable. A true hidden gem.", rating: 5 },
+          { id: 3, name: "Amit Roy", text: "Great ambiance and the Bamboo Chicken is a must-try. Highly recommended.", rating: 4 },
+        ];
+
+        const FEATURES = [
+          { icon: Leaf, title: "Bamboo Ambiance", desc: "Sustainable architecture meeting modern comfort." },
+          { icon: ChefHat, title: "Expert Chefs", desc: "Culinary masters creating authentic flavors." },
+          { icon: Coffee, title: "Premium Coffee", desc: "Freshly brewed artisan coffee and beverages." },
+        ];
+
+        // --- COMPONENTS ---
+
+        const ClockTimePicker = ({ value, onChange, date }) => {
+          const [isOpen, setIsOpen] = useState(false);
+          const [mode, setMode] = useState('hours');
+
+          const parseTime = (str) => {
+            if (!str) return { hours: 12, minutes: 0, period: 'PM' };
+            const [h, m] = str.split(':');
+            let hours = parseInt(h);
+            const minutes = parseInt(m) || 0;
+            
+            if (isNaN(hours)) return { hours: 12, minutes: 0, period: 'PM' };
+            
+            let period = 'AM';
+            if (hours >= 12) {
+              period = 'PM';
+              if (hours > 12) hours -= 12;
+            } else if (hours === 0) {
+              hours = 12;
+            }
+            
+            return { hours, minutes, period };
+          };
+
+          const [timeState, setTimeState] = useState(parseTime(value));
+
+          useEffect(() => {
+            if (value && value.includes(':')) {
+              setTimeState(parseTime(value));
+            }
+          }, [value]);
+
+          const handleManualChange = (e) => {
+            onChange(e.target.value);
+          };
+
+          const handleHourClick = (h) => {
+            setTimeState(prev => ({ ...prev, hours: h }));
+            setMode('minutes');
+          };
+
+          const handleMinuteClick = (m) => {
+            setTimeState(prev => ({ ...prev, minutes: m }));
+          };
+
+          const togglePeriod = (p) => {
+            setTimeState(prev => ({ ...prev, period: p }));
+          };
+
+          const confirmTime = () => {
+            let { hours, minutes, period } = timeState;
+            if (period === 'PM' && hours !== 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+            
+            const formatted = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            onChange(formatted);
+            setIsOpen(false);
+            setMode('hours');
+          };
+
+          const isDateToday = () => {
+            if (!date) return false;
+            const today = new Date();
+            const [y, m, d] = date.split('-').map(Number);
+            const selected = new Date(y, m - 1, d);
+            return selected.toDateString() === today.toDateString();
+          };
+
+          const renderClockFace = () => {
+            const isHours = mode === 'hours';
+            const items = isHours ? [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] : [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+            const selectedValue = isHours ? timeState.hours : timeState.minutes;
+            const radius = 90;
+            const center = 110;
+
+            const isToday = isDateToday();
+            const now = new Date();
+            const currentHour24 = now.getHours();
+            const currentMinute = now.getMinutes();
+
+            return (
+              <div className="relative w-[220px] h-[220px] bg-[#EBF4DD]/20 rounded-full mx-auto border border-[#90AB8B]/30 shadow-inner">
+                <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-[#5A7863] rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10"></div>
+                
+                <div 
+                   className="absolute top-1/2 left-1/2 h-[70px] w-1 bg-[#5A7863] origin-bottom transition-transform duration-300 ease-out z-0 rounded-full opacity-60"
+                   style={{ 
+                     transform: `translateX(-50%) translateY(-100%) rotate(${(isHours ? selectedValue : selectedValue / 5) * 30}deg)` 
+                   }}
+                ></div>
+
+                {items.map((num, i) => {
+                  const angleDeg = i * 30 - 90; 
+                  const angleRad = angleDeg * (Math.PI / 180);
+                  const left = center + radius * Math.cos(angleRad);
+                  const top = center + radius * Math.sin(angleRad);
+
+                  const isSelected = selectedValue === num;
+                  
+                  let isDisabled = false;
+                  if (isToday) {
+                     if (isHours) {
+                        let h24 = num;
+                        if (timeState.period === 'AM') {
+                            if (num === 12) h24 = 0;
+                        } else { 
+                            if (num !== 12) h24 = num + 12;
+                        }
+                        if (h24 < currentHour24) isDisabled = true;
+                     } else {
+                        let h24 = timeState.hours;
+                        if (timeState.period === 'AM') {
+                            if (h24 === 12) h24 = 0;
+                        } else {
+                            if (h24 !== 12) h24 = h24 + 12;
+                        }
+                        
+                        if (h24 < currentHour24) isDisabled = true;
+                        else if (h24 === currentHour24 && num < currentMinute) isDisabled = true;
+                     }
+                  }
+
+                  return (
+                    <button
+                      key={num}
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => isHours ? handleHourClick(num) : handleMinuteClick(num)}
+                      className={`absolute w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 transform -translate-x-1/2 -translate-y-1/2 z-10
+                        ${isSelected 
+                          ? 'bg-[#5A7863] text-white scale-110 shadow-md' 
+                          : isDisabled 
+                            ? 'text-gray-300 cursor-not-allowed bg-transparent'
+                            : 'text-[#3B4953] hover:bg-[#90AB8B]/30'
+                        }`}
+                      style={{ left: `${left}px`, top: `${top}px` }}
+                    >
+                      {isHours ? num : num.toString().padStart(2, '0')}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          };
+
+          const isToday = isDateToday();
+          const currentHour24 = new Date().getHours();
+          const isAmDisabled = isToday && currentHour24 >= 12;
+
+          return (
+            <div className="relative w-full">
+              <div className="relative">
+                <input 
+                  type="text" 
+                  value={value}
+                  onChange={handleManualChange}
+                  placeholder="Select or Type Time"
+                  className="w-full pl-4 pr-10 py-3 rounded-lg border border-[#90AB8B]/40 focus:ring-2 focus:ring-[#5A7863] focus:border-transparent outline-none bg-white" 
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(true)}
+                  className="absolute right-0 top-0 h-full px-3 text-[#5A7863] hover:text-[#3B4953] transition-colors focus:outline-none"
+                >
+                  <Clock size={20} />
+                </button>
+              </div>
+
+              {isOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                   <div className="absolute inset-0" onClick={() => setIsOpen(false)}></div>
+                   
+                   <div className="bg-white rounded-2xl shadow-2xl border border-[#90AB8B]/20 p-6 w-full max-w-sm relative z-10 animate-in zoom-in-95 duration-200">
+                    <h3 className="text-center font-serif text-xl font-bold text-[#3B4953] mb-4">Select Time</h3>
+                    
+                    <div className="flex justify-center items-end gap-2 mb-6">
+                      <button 
+                        type="button"
+                        onClick={() => setMode('hours')}
+                        className={`text-4xl font-bold font-serif leading-none transition-colors ${mode === 'hours' ? 'text-[#5A7863]' : 'text-[#3B4953]/40'}`}
+                      >
+                        {timeState.hours.toString().padStart(2, '0')}
+                      </button>
+                      <span className="text-3xl font-bold text-[#3B4953]/40 mb-1">:</span>
+                      <button 
+                        type="button"
+                        onClick={() => setMode('minutes')}
+                        className={`text-4xl font-bold font-serif leading-none transition-colors ${mode === 'minutes' ? 'text-[#5A7863]' : 'text-[#3B4953]/40'}`}
+                      >
+                        {timeState.minutes.toString().padStart(2, '0')}
+                      </button>
+                      
+                      <div className="flex flex-col ml-2 gap-1 mb-1">
+                        <button 
+                          type="button"
+                          disabled={isAmDisabled}
+                          onClick={() => togglePeriod('AM')}
+                          className={`text-xs font-bold px-2 py-1 rounded ${timeState.period === 'AM' ? 'bg-[#5A7863] text-white' : isAmDisabled ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-gray-100 text-gray-500'}`}
+                        >
+                          AM
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => togglePeriod('PM')}
+                          className={`text-xs font-bold px-2 py-1 rounded ${timeState.period === 'PM' ? 'bg-[#5A7863] text-white' : 'bg-gray-100 text-gray-500'}`}
+                        >
+                          PM
+                        </button>
+                      </div>
+                    </div>
+
+                    {renderClockFace()}
+
+                    <div className="mt-6 flex justify-end gap-2">
+                      <button 
+                        type="button"
+                        onClick={() => setIsOpen(false)}
+                        className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:bg-gray-100"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={confirmTime}
+                        className="px-6 py-2 text-sm bg-[#5A7863] text-white rounded-lg font-bold hover:bg-[#3B4953] shadow-md transition-all"
+                      >
+                        Set Time
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        const CustomDatePicker = ({ value, onChange }) => {
+          const [isOpen, setIsOpen] = useState(false);
+          const initialDate = value && !isNaN(Date.parse(value)) ? new Date(value) : new Date();
+          const [currentDate, setCurrentDate] = useState(initialDate); 
+          
+          useEffect(() => {
+            if (value && !isNaN(Date.parse(value))) {
+              setCurrentDate(new Date(value));
+            }
+          }, [value]);
+
+          const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+          const firstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+          const handlePrevMonth = () => {
+            setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+          };
+
+          const handleNextMonth = () => {
+            setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+          };
+
+          const handleDateClick = (day) => {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            onChange(formattedDate);
+            setIsOpen(false);
+          };
+          
+          const handleManualChange = (e) => {
+              onChange(e.target.value);
+          };
+
+          const renderCalendarDays = () => {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const totalDays = daysInMonth(year, month);
+            const startDay = firstDayOfMonth(year, month);
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const days = [];
+            for (let i = 0; i < startDay; i++) {
+              days.push(<div key={`empty-${i}`} className="h-10 w-10"></div>);
+            }
+            
+            for (let d = 1; d <= totalDays; d++) {
+              const currentDayDate = new Date(year, month, d);
+              const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+              const isSelected = value === dateStr;
+              
+              const isToday = today.getTime() === currentDayDate.getTime();
+              const isPast = currentDayDate < today;
+
+              days.push(
+                <button
+                  key={d}
+                  type="button"
+                  disabled={isPast}
+                  onClick={() => handleDateClick(d)}
+                  className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors
+                    ${isPast 
+                      ? 'text-gray-300 cursor-not-allowed' 
+                      : isSelected 
+                        ? 'bg-[#5A7863] text-white shadow-md' 
+                        : isToday 
+                          ? 'border border-[#5A7863] text-[#5A7863] font-bold' 
+                          : 'text-[#3B4953] hover:bg-[#90AB8B]/30'
+                    }`}
+                >
+                  {d}
+                </button>
+              );
+            }
+            return days;
+          };
+
+          const monthNames = ["January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"];
+
+          return (
+            <div className="relative w-full">
+              <div className="relative">
+                <input 
+                    type="text" 
+                    value={value}
+                    onChange={handleManualChange}
+                    placeholder="YYYY-MM-DD"
+                    className="w-full pl-4 pr-10 py-3 rounded-lg border border-[#90AB8B]/40 focus:ring-2 focus:ring-[#5A7863] focus:border-transparent outline-none bg-white" 
+                />
+                <button 
+                  type="button"
+                  onClick={() => setIsOpen(true)}
+                  className="absolute right-0 top-0 h-full px-3 text-[#5A7863] hover:text-[#3B4953] transition-colors focus:outline-none"
+                >
+                  <Calendar size={20} />
+                </button>
+              </div>
+
+              {isOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                   <div className="absolute inset-0" onClick={() => setIsOpen(false)}></div>
+                   
+                   <div className="bg-white rounded-2xl shadow-2xl border border-[#90AB8B]/20 p-6 w-full max-w-sm relative z-10 animate-in zoom-in-95 duration-200">
+                     
+                     <div className="flex justify-between items-center mb-6">
+                        <button type="button" onClick={handlePrevMonth} className="p-2 hover:bg-[#EBF4DD] rounded-full text-[#3B4953] transition-colors">
+                            <ChevronLeft size={20} />
+                        </button>
+                        <h3 className="text-xl font-serif font-bold text-[#3B4953]">
+                            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                        </h3>
+                        <button type="button" onClick={handleNextMonth} className="p-2 hover:bg-[#EBF4DD] rounded-full text-[#3B4953] transition-colors">
+                            <ChevronRight size={20} />
+                        </button>
+                     </div>
+
+                     <div className="grid grid-cols-7 mb-2 text-center">
+                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                            <div key={day} className="text-xs font-bold text-[#90AB8B] uppercase tracking-wider">{day}</div>
+                        ))}
+                     </div>
+
+                     <div className="grid grid-cols-7 gap-1 justify-items-center">
+                        {renderCalendarDays()}
+                     </div>
+
+                     <div className="mt-6 flex justify-end gap-2">
+                        <button 
+                          type="button"
+                          onClick={() => setIsOpen(false)}
+                          className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:bg-gray-100"
+                        >
+                          Cancel
+                        </button>
+                     </div>
+
+                   </div>
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        const AboutSection = () => (
+          <div className="pt-28 pb-20 bg-[#EBF4DD] min-h-screen">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <div className="grid grid-cols-2 gap-4">
+                  <img src="https://images.unsplash.com/photo-1550966871-3ed3c47e2ce2?auto=format&fit=crop&q=80&w=400" className="rounded-xl shadow-lg mt-8" alt="Interior" />
+                  <img src="https://images.unsplash.com/photo-1587574293340-e0011c4e8ecf?auto=format&fit=crop&q=80&w=400" className="rounded-xl shadow-lg" alt="Food" />
+                </div>
+                <div>
+                  <span className="text-[#5A7863] font-bold tracking-widest uppercase text-sm">Our Story</span>
+                  <h2 className="text-4xl font-serif font-bold text-[#3B4953] mt-2 mb-6">Traditional Roots, Modern Soul</h2>
+                  <p className="text-[#3B4953]/80 mb-6 leading-relaxed">
+                    Etyadi was born from a simple desire: to create a space in Silchar where families could disconnect from the city noise and reconnect with nature. 
+                    Constructed extensively using locally sourced bamboo and reclaimed wood, our structure breathes with the environment.
+                  </p>
+                  <p className="text-[#3B4953]/80 mb-8 leading-relaxed">
+                    Our kitchen is led by Chef Anirban, who brings 15 years of experience in blending traditional Assamese techniques with contemporary presentation.
+                  </p>
+                  <div className="flex gap-4">
+                    <div className="border-l-4 border-[#5A7863] pl-4">
+                      <p className="font-bold text-[#3B4953] text-lg">Local Sourcing</p>
+                      <p className="text-[#3B4953]/60 text-sm">Supporting Silchar farmers</p>
+                    </div>
+                    <div className="border-l-4 border-[#90AB8B] pl-4">
+                      <p className="font-bold text-[#3B4953] text-lg">Eco Friendly</p>
+                      <p className="text-[#3B4953]/60 text-sm">Plastic-free commitment</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+        const ContactSection = () => (
+          <div className="pt-28 pb-20 bg-[#EBF4DD] min-h-screen">
+              <div className="max-w-4xl mx-auto px-4">
+                  <h2 className="text-4xl font-serif font-bold text-center text-[#3B4953] mb-12">Get in Touch</h2>
+                  <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden">
+                      <div className="grid grid-cols-1 md:grid-cols-2">
+                          <div className="p-8 bg-[#3B4953] text-[#EBF4DD]">
+                              <h3 className="text-xl font-bold mb-6">Contact Info</h3>
+                              <div className="space-y-6">
+                                  <div className="flex items-start gap-4">
+                                      <MapPin className="text-[#90AB8B] mt-1" />
+                                      <p>Etyadi Restaurant<br/>Near Collegiate School<br/>Silchar, Assam 788001</p>
+                                  </div>
+                                  <div className="flex items-center gap-4">
+                                      <Phone className="text-[#90AB8B]" />
+                                      <p>084030 51474</p>
+                                  </div>
+                                  <div className="flex items-start gap-4">
+                                      <Clock className="text-[#90AB8B] mt-1" />
+                                      <div>
+                                          <p className="font-bold mb-1">Opening Hours</p>
+                                          <p className="text-sm text-[#EBF4DD]/70">Mon - Sun: 11:00 AM - 10:00 PM</p>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                          <div className="p-8">
+                              <h3 className="text-xl font-bold text-[#3B4953] mb-6">Send a Message</h3>
+                              <form className="space-y-4">
+                                  <input type="text" placeholder="Name" className="w-full px-4 py-2 border border-[#90AB8B]/30 bg-white rounded-lg focus:ring-2 focus:ring-[#5A7863] outline-none" />
+                                  <input type="email" placeholder="Email" className="w-full px-4 py-2 border border-[#90AB8B]/30 bg-white rounded-lg focus:ring-2 focus:ring-[#5A7863] outline-none" />
+                                  <textarea rows={4} placeholder="Message" className="w-full px-4 py-2 border border-[#90AB8B]/30 bg-white rounded-lg focus:ring-2 focus:ring-[#5A7863] outline-none"></textarea>
+                                  <button className="w-full bg-[#5A7863] text-white font-bold py-3 rounded-lg hover:bg-[#3B4953]">Send Message</button>
+                              </form>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+        );
+
+        const MenuSection = ({ addToCart }) => {
+          const [activeCategory, setActiveCategory] = useState('All');
+          const [searchTerm, setSearchTerm] = useState('');
+          
+          const categories = ['All', 'Signature', 'Starters', 'Main Course', 'Chinese', 'Rice', 'Beverages', 'Dessert'];
+
+          const filteredItems = MENU_ITEMS.filter(item => {
+            const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
+            const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+            return matchesCategory && matchesSearch;
+          });
+
+          return (
+            <div className="pt-28 pb-20 bg-[#EBF4DD] min-h-screen">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-12">
+                  <span className="text-[#5A7863] font-bold tracking-widest uppercase text-sm">Culinary Excellence</span>
+                  <h2 className="text-4xl font-serif font-bold text-[#3B4953] mt-2">Our Menu</h2>
+                  <p className="mt-4 text-[#3B4953]/80 max-w-2xl mx-auto">
+                    A fusion of traditional Assamese flavors, classic North Indian dishes, and modern culinary arts.
+                  </p>
+                </div>
+
+                <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 sticky top-20 z-30 bg-[#EBF4DD]/95 py-4 px-2 rounded-xl backdrop-blur-sm shadow-sm">
+                  <div className="flex overflow-x-auto pb-2 md:pb-0 gap-2 w-full md:w-auto hide-scrollbar">
+                    {categories.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setActiveCategory(cat)}
+                        className={`px-5 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all ${
+                          activeCategory === cat 
+                            ? 'bg-[#5A7863] text-white shadow-md' 
+                            : 'bg-white/60 text-[#3B4953] hover:bg-white'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div className="relative w-full md:w-64">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#90AB8B]" size={18} />
+                    <input 
+                      type="text" 
+                      placeholder="Search dishes..." 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 rounded-full border border-[#90AB8B]/30 focus:outline-none focus:ring-2 focus:ring-[#5A7863] bg-white/80"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                  {filteredItems.map((item) => (
+                    <div key={item.id} className="bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group">
+                      <div className="relative h-48 overflow-hidden">
+                        <img 
+                          src={item.image} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                        />
+                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
+                          <Star className="text-yellow-400 fill-current" size={14} />
+                          <span className="text-xs font-bold text-[#3B4953]">{item.rating}</span>
+                        </div>
+                        {item.category === 'Signature' && (
+                          <div className="absolute top-3 left-3 bg-[#5A7863] text-white px-2 py-1 rounded-md text-xs font-bold uppercase shadow-sm">
+                            Bestseller
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="p-5">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-serif font-bold text-lg text-[#3B4953] leading-tight">{item.name}</h3>
+                          <div className={`w-4 h-4 rounded-sm border flex items-center justify-center flex-shrink-0 ${item.type === 'veg' ? 'border-green-600' : 'border-red-600'}`}>
+                            <div className={`w-2 h-2 rounded-full ${item.type === 'veg' ? 'bg-green-600' : 'bg-red-600'}`}></div>
+                          </div>
+                        </div>
+                        <p className="text-[#3B4953]/70 text-sm line-clamp-2 mb-4 h-10">{item.description}</p>
+                        <div className="flex justify-between items-center mt-auto">
+                          <span className="text-lg font-bold text-[#5A7863]">₹{item.price}</span>
+                          <button 
+                            onClick={() => window.open(ORDER_LINK, '_blank')}
+                            className="px-4 py-2 bg-[#EBF4DD] hover:bg-[#5A7863] hover:text-white text-[#3B4953] rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+                          >
+                            Order <ExternalLink size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const ReservationSection = () => {
+          const [formData, setFormData] = useState({
+            Date: '',
+            Time: '',
+            'Party Size': '2 People',
+            Name: '',
+            Phone: '',
+            'Special Request': ''
+          });
+          const [status, setStatus] = useState('idle');
+
+          const handleChange = (e) => {
+            const { name, value } = e.target;
+            setFormData(prev => ({
+              ...prev,
+              [name]: value
+            }));
+          };
+
+          const handleTimeChange = (newTime) => {
+            setFormData(prev => ({ ...prev, Time: newTime }));
+          };
+
+          const handleDateChange = (newDate) => {
+            setFormData(prev => ({ ...prev, Date: newDate }));
+          };
+
+          const handleSubmit = (e) => {
+            e.preventDefault();
+            setStatus('submitting');
+
+            if (!GOOGLE_SCRIPT_URL) {
+              alert("Please configure the Google Script URL in the constants file.");
+              setStatus('idle');
+              return;
+            }
+
+            const payload = {
+              date: formData.Date,
+              time: formData.Time,
+              partySize: formData['Party Size'],
+              fullName: formData.Name,
+              phone: formData.Phone,
+              request: formData['Special Request']
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+              method: 'POST',
+              headers: {
+                "Content-Type": "text/plain;charset=utf-8",
+              },
+              body: JSON.stringify(payload)
+            })
+            .then(() => {
+                setStatus('success');
+                setFormData({
+                    Date: '',
+                    Time: '',
+                    'Party Size': '2 People',
+                    Name: '',
+                    Phone: '',
+                    'Special Request': ''
+                });
+                setTimeout(() => setStatus('idle'), 5000);
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                setStatus('error');
+            });
+          };
+
+          const isFormValid = Boolean(
+            formData.Date &&
+            formData.Time &&
+            formData['Party Size'] &&
+            formData.Name.trim() &&
+            formData.Phone.trim()
+          );
+
+          const renderRequiredIcon = (value) => {
+            const isFilled = value && value.trim().length > 0;
+            return (
+              <Star 
+                size={14} 
+                className={`inline ml-1 mb-0.5 transition-all duration-300 ${isFilled ? 'fill-[#3B4953] text-[#3B4953]' : 'text-[#90AB8B]'}`} 
+              />
+            );
+          };
+
+          return (
+            <div className="pt-28 pb-20 bg-[#EBF4DD] min-h-screen flex items-center">
+              <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+                  <div className="md:w-1/2 relative min-h-[300px] md:min-h-full">
+                    <img 
+                      src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=800" 
+                      alt="Dining Table" 
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-[#3B4953]/40 flex items-center justify-center">
+                      <div className="text-center text-white p-8">
+                        <h3 className="text-3xl font-serif font-bold mb-2">Book Your Table</h3>
+                        <p className="text-white/90">Join us for an unforgettable evening</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="md:w-1/2 p-8 md:p-12">
+                    {status !== 'success' ? (
+                      <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                          <h2 className="text-2xl font-serif font-bold text-[#3B4953] mb-6">Reservation Details</h2>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-[#3B4953] mb-1 flex items-center">
+                                Date {renderRequiredIcon(formData.Date)}
+                            </label>
+                            <CustomDatePicker 
+                              value={formData.Date} 
+                              onChange={handleDateChange} 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-[#3B4953] mb-1 flex items-center">
+                                Time {renderRequiredIcon(formData.Time)}
+                            </label>
+                            <ClockTimePicker 
+                              value={formData.Time}
+                              onChange={handleTimeChange}
+                              date={formData.Date}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-[#3B4953] mb-1 flex items-center">
+                            Party Size {renderRequiredIcon(formData['Party Size'])}
+                          </label>
+                          <select 
+                            name="Party Size"
+                            value={formData['Party Size']}
+                            onChange={handleChange}
+                            className="w-full px-4 py-3 rounded-lg border border-[#90AB8B]/40 focus:ring-2 focus:ring-[#5A7863] focus:border-transparent outline-none bg-white text-[#3B4953]"
+                          >
+                            <option>2 People</option>
+                            <option>4 People</option>
+                            <option>6 People</option>
+                            <option>Large Group (10+)</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-[#3B4953] mb-1 flex items-center">
+                                Full Name {renderRequiredIcon(formData.Name)}
+                            </label>
+                            <input 
+                              type="text" 
+                              name="Name"
+                              placeholder="John Doe" 
+                              value={formData.Name}
+                              onChange={handleChange}
+                              required 
+                              className="w-full px-4 py-3 rounded-lg border border-[#90AB8B]/40 focus:ring-2 focus:ring-[#5A7863] outline-none bg-white" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-[#3B4953] mb-1 flex items-center">
+                                Phone Number {renderRequiredIcon(formData.Phone)}
+                            </label>
+                            <input 
+                              type="tel" 
+                              name="Phone"
+                              placeholder="123 456 7890" 
+                              value={formData.Phone}
+                              onChange={handleChange}
+                              required 
+                              className="w-full px-4 py-3 rounded-lg border border-[#90AB8B]/40 focus:ring-2 focus:ring-[#5A7863] outline-none bg-white" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-[#3B4953] mb-1">Special Request</label>
+                            <textarea 
+                              name="Special Request"
+                              placeholder="Birthday, Anniversary, etc." 
+                              rows={3}
+                              value={formData['Special Request']}
+                              onChange={handleChange}
+                              className="w-full px-4 py-3 rounded-lg border border-[#90AB8B]/40 focus:ring-2 focus:ring-[#5A7863] outline-none bg-white"
+                            ></textarea>
+                          </div>
+                        </div>
+
+                        <button 
+                          type="submit" 
+                          disabled={status === 'submitting' || !isFormValid}
+                          className="w-full bg-[#5A7863] text-white font-bold py-4 rounded-lg hover:bg-[#3B4953] transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {status === 'submitting' ? 'Booking...' : 'Confirm Booking'}
+                        </button>
+                        {status === 'error' && (
+                            <p className="text-red-500 text-center text-sm">Something went wrong. Please try again.</p>
+                        )}
+                        <p className="text-xs text-center text-[#3B4953]/70 mt-4">
+                          For groups larger than 15, please call us directly at 084030 51474
+                        </p>
+                      </form>
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                        <CheckCircle className="text-[#5A7863] w-20 h-20 mb-6" />
+                        <h3 className="text-2xl font-bold text-[#3B4953] mb-2">Reservation Received!</h3>
+                        <p className="text-[#3B4953]/80 mb-8">We have received your request. You will receive a confirmation SMS shortly.</p>
+                        <button onClick={() => setStatus('idle')} className="text-[#5A7863] font-semibold hover:underline">
+                          Make another reservation
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const Footer = () => (
+          <footer className="bg-[#3B4953] text-[#EBF4DD] pt-16 pb-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <div>
+                  <div className="flex items-center mb-6">
+                    <div className="w-8 h-8 bg-[#5A7863] rounded-full flex items-center justify-center mr-2">
+                      <span className="text-[#EBF4DD] font-serif font-bold">E</span>
+                    </div>
+                    <h2 className="text-2xl font-serif font-bold tracking-wide">ETYADI</h2>
+                  </div>
+                  <p className="text-[#EBF4DD]/70 mb-6">
+                    Silchar's premier dining destination celebrating bamboo aesthetics and culinary excellence.
+                  </p>
+                  <div className="flex space-x-4">
+                    <a href="#" className="w-10 h-10 rounded-full bg-[#5A7863]/30 flex items-center justify-center hover:bg-[#5A7863] transition-colors"><Facebook size={18} /></a>
+                    <a href="#" className="w-10 h-10 rounded-full bg-[#5A7863]/30 flex items-center justify-center hover:bg-[#5A7863] transition-colors"><Instagram size={18} /></a>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold mb-6 text-[#90AB8B]">Quick Links</h3>
+                  <ul className="space-y-3 text-[#EBF4DD]/70">
+                    <li><button className="hover:text-white transition-colors">Home</button></li>
+                    <li><button className="hover:text-white transition-colors">Menu</button></li>
+                    <li><button className="hover:text-white transition-colors">Reservations</button></li>
+                    <li><button className="hover:text-white transition-colors">Private Events</button></li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold mb-6 text-[#90AB8B]">Contact Us</h3>
+                  <ul className="space-y-4 text-[#EBF4DD]/70">
+                    <li className="flex items-start gap-3">
+                      <MapPin className="flex-shrink-0 mt-1" size={18} />
+                      <span>Near Collegiate School, Silchar, Assam 788001</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <Phone size={18} />
+                      <span>084030 51474</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-[#5A7863]"></div>
+                      <span>Open today: 11:00 AM - 10:00 PM</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold mb-6 text-[#90AB8B]">Newsletter</h3>
+                  <p className="text-[#EBF4DD]/70 mb-4 text-sm">Subscribe for exclusive offers and updates.</p>
+                  <form className="flex flex-col gap-2">
+                    <input 
+                      type="email" 
+                      placeholder="Your email address" 
+                      className="bg-[#EBF4DD]/10 border-none rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-[#5A7863] outline-none text-white placeholder-white/50"
+                    />
+                    <button className="bg-[#5A7863] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#90AB8B] transition-colors">
+                      Subscribe
+                    </button>
+                  </form>
+                </div>
+              </div>
+              
+              <div className="border-t border-[#EBF4DD]/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-[#EBF4DD]/50">
+                <p>&copy; 2024 Etyadi Restaurant. All rights reserved.</p>
+                <div className="flex gap-6 mt-4 md:mt-0">
+                  <a href="#" className="hover:text-white">Privacy Policy</a>
+                  <a href="#" className="hover:text-white">Terms of Service</a>
+                </div>
+              </div>
+            </div>
+          </footer>
+        );
+
+        const Header = ({ 
+          currentPage, 
+          setCurrentPage, 
+          isMobileMenuOpen, 
+          setIsMobileMenuOpen 
+        }) => {
+          const navItems = ['Home', 'Menu', 'Reservations', 'About', 'Contact'];
+
+          const handleNavClick = (item) => {
+            setCurrentPage(item);
+            setIsMobileMenuOpen(false);
+          };
+
+          const handleOrderOnline = () => {
+            window.open(ORDER_LINK, '_blank');
+            setIsMobileMenuOpen(false);
+          };
+
+          return (
+            <nav className="fixed w-full z-50 bg-[#EBF4DD]/80 backdrop-blur-md shadow-sm border-b border-[#90AB8B]/20 transition-all duration-300">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-20">
+                  <div 
+                    className="flex-shrink-0 flex items-center cursor-pointer" 
+                    onClick={() => setCurrentPage('Home')}
+                  >
+                    <div className="w-10 h-10 bg-[#5A7863] rounded-full flex items-center justify-center mr-2 shadow-sm">
+                      <span className="text-[#EBF4DD] font-serif font-bold text-xl">E</span>
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-serif font-bold text-[#3B4953] tracking-wide">ETYADI</h1>
+                      <p className="text-xs text-[#5A7863] tracking-widest uppercase font-semibold">Restaurant</p>
+                    </div>
+                  </div>
+
+                  <div className="hidden md:flex items-center gap-2">
+                    {navItems.map((item) => (
+                      <button
+                        key={item}
+                        onClick={() => setCurrentPage(item)}
+                        className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
+                          currentPage === item 
+                            ? 'bg-[#5A7863] text-[#EBF4DD] shadow-md transform scale-105' 
+                            : 'text-[#3B4953]/80 hover:bg-[#5A7863]/10 hover:text-[#5A7863]'
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                    
+                    <div className="flex items-center gap-3 ml-4">
+                      <button 
+                        onClick={handleOrderOnline}
+                        className="bg-[#3B4953] text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-[#5A7863] transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2"
+                      >
+                        Order Online <ExternalLink size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="md:hidden flex items-center">
+                    <button
+                      onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                      className="p-2 rounded-md text-[#3B4953] hover:text-[#5A7863] focus:outline-none"
+                    >
+                      {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {isMobileMenuOpen && (
+                <div className="md:hidden bg-[#EBF4DD] border-t border-[#90AB8B]/30 shadow-xl">
+                  <div className="px-4 pt-4 pb-6 space-y-2">
+                    {navItems.map((item) => (
+                      <button
+                        key={item}
+                        onClick={() => handleNavClick(item)}
+                        className={`block w-full text-left px-4 py-3 rounded-xl text-base font-medium transition-all ${
+                          currentPage === item
+                            ? 'bg-[#5A7863] text-white shadow-md'
+                            : 'text-[#3B4953] hover:bg-[#90AB8B]/20'
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                    <button 
+                      onClick={handleOrderOnline}
+                      className="w-full mt-4 bg-[#3B4953] text-white px-5 py-3 rounded-xl text-base font-medium flex items-center justify-center gap-2 shadow-md"
+                    >
+                      Order Online <ExternalLink size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </nav>
+          );
+        };
+
+        const Hero = ({ setCurrentPage }) => {
+          const HERO_IMAGES = [
+            "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=1920", 
+            "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=1920", 
+            "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1920"  
+          ];
+          const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+          useEffect(() => {
+            const interval = setInterval(() => {
+              setCurrentImageIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+            }, 5000);
+            return () => clearInterval(interval);
+          }, []);
+
+          return (
+            <div className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
+              {HERO_IMAGES.map((img, index) => (
+                <div 
+                  key={img}
+                  className={`absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out ${
+                    index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  <img 
+                    src={img} 
+                    alt={`Etyadi Ambiance ${index + 1}`} 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#3B4953]/90"></div>
+                </div>
+              ))}
+
+              <div className="relative z-10 text-center px-4 max-w-4xl mx-auto mt-16">
+                <div className="inline-block px-4 py-1 border border-[#EBF4DD]/30 rounded-full bg-white/10 backdrop-blur-sm mb-6 animate-fade-in-up">
+                  <span className="text-[#EBF4DD] text-sm tracking-widest uppercase font-semibold">Est. 2024 • Silchar, Assam</span>
+                </div>
+                <h1 className="text-5xl md:text-7xl font-serif font-bold text-[#EBF4DD] mb-6 leading-tight drop-shadow-lg">
+                  Where Nature Meets <span className="text-[#90AB8B]">Flavor</span>
+                </h1>
+                <p className="text-xl text-[#EBF4DD]/90 mb-10 max-w-2xl mx-auto font-light">
+                  Experience premium dining amidst authentic bamboo aesthetics. 
+                  Taste the essence of freshness in every bite.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <button 
+                    onClick={() => window.open(ORDER_LINK, '_blank')}
+                    className="w-full sm:w-auto px-8 py-4 bg-[#5A7863] hover:bg-[#3B4953] text-white rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                  >
+                    Order Online <ShoppingBag size={20} />
+                  </button>
+                  <button 
+                    onClick={() => setCurrentPage('Reservations')}
+                    className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-[#EBF4DD] text-[#EBF4DD] hover:bg-[#EBF4DD] hover:text-[#3B4953] rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    Book A Table <ChevronRight size={20} />
+                  </button>
+                </div>
+                
+                <div className="mt-12 flex justify-center items-center gap-6 text-[#EBF4DD]/80">
+                  <div className="flex items-center gap-2">
+                    <Star className="text-yellow-400 fill-current" size={20} />
+                    <span className="font-semibold">4.0 (668+ Reviews)</span>
+                  </div>
+                  <div className="h-4 w-px bg-[#EBF4DD]/30"></div>
+                  <div>
+                    <span className="font-semibold">Open Now: </span> Closes 10 PM
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const App = () => {
+          const [currentPage, setCurrentPage] = useState('Home');
+          const [cart, setCart] = useState([]);
+          const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+          const addToCart = (item) => {
+            setCart([...cart, item]);
+            alert(`${item.name} added to cart!`);
+          };
+
+          const renderPage = () => {
+            switch(currentPage) {
+              case 'Home':
+                return (
+                  <React.Fragment>
+                    <Hero setCurrentPage={setCurrentPage} />
+                    <div className="py-20 bg-[#EBF4DD]">
+                      <div className="max-w-7xl mx-auto px-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                          {FEATURES.map((feature, idx) => (
+                            <div key={idx} className="bg-white/80 backdrop-blur-sm p-8 rounded-xl shadow-lg border-b-4 border-[#5A7863] text-center hover:-translate-y-2 transition-transform duration-300">
+                              <div className="w-16 h-16 bg-[#EBF4DD] rounded-full flex items-center justify-center mx-auto mb-6 text-[#5A7863]">
+                                <feature.icon size={32} />
+                              </div>
+                              <h3 className="text-xl font-bold text-[#3B4953] mb-3">{feature.title}</h3>
+                              <p className="text-[#3B4953]/70">{feature.desc}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white/60 py-20">
+                       <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
+                          <div className="md:w-1/2">
+                            <img src="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&q=80&w=800" className="rounded-2xl shadow-2xl" alt="Interior" />
+                          </div>
+                          <div className="md:w-1/2">
+                             <span className="text-[#5A7863] font-bold uppercase tracking-wider text-sm">The Experience</span>
+                             <h2 className="text-4xl font-serif font-bold text-[#3B4953] mt-2 mb-6">A Symphony of Taste & Texture</h2>
+                             <p className="text-[#3B4953]/80 mb-8 text-lg">Whether it's a casual lunch or a celebration, Etyadi provides the perfect backdrop. Our bamboo-themed interiors are designed to calm the senses while our food ignites the palate.</p>
+                             <button onClick={() => setCurrentPage('About')} className="text-[#5A7863] font-bold border-b-2 border-[#5A7863] pb-1 hover:text-[#3B4953] hover:border-[#3B4953] transition-all">Read Our Story</button>
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className="bg-[#5A7863] py-20 text-white">
+                      <div className="max-w-7xl mx-auto px-4 text-center">
+                        <h2 className="text-3xl font-serif font-bold mb-12 text-[#EBF4DD]">What Our Guests Say</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                          {TESTIMONIALS.map((t) => (
+                            <div key={t.id} className="bg-[#3B4953]/20 backdrop-blur-sm p-8 rounded-xl relative border border-[#90AB8B]/20">
+                              <div className="flex justify-center mb-4">
+                                {[...Array(t.rating)].map((_, i) => (
+                                  <Star key={i} size={16} className="text-[#EBF4DD] fill-current" />
+                                ))}
+                              </div>
+                              <p className="italic text-[#EBF4DD]/90 mb-6">"{t.text}"</p>
+                              <p className="font-bold text-[#90AB8B]">- {t.name}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </React.Fragment>
+                );
+              case 'Menu':
+                return <MenuSection addToCart={addToCart} />;
+              case 'Reservations':
+                return <ReservationSection />;
+              case 'About':
+                return <AboutSection />;
+              case 'Contact':
+                return <ContactSection />;
+              default:
+                return <Hero setCurrentPage={setCurrentPage} />;
+            }
+          };
+
+          useEffect(() => {
+            window.scrollTo(0, 0);
+          }, [currentPage]);
+
+          return (
+            <div className="font-sans text-[#3B4953] bg-[#EBF4DD] min-h-screen selection:bg-[#90AB8B] selection:text-[#3B4953]">
+              <Header 
+                currentPage={currentPage} 
+                setCurrentPage={setCurrentPage} 
+                cartCount={cart.length}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+              />
+              
+              <main className="min-h-screen">
+                {renderPage()}
+              </main>
+
+              <Footer />
+            </div>
+          );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(
+          <React.StrictMode>
+            <App />
+          </React.StrictMode>
+        );
+    </script>
+</body>
+</html>
